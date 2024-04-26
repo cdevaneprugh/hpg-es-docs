@@ -1,22 +1,39 @@
-# Introduction
+# Table of Contents
+
+1. [Introduction](# intro)
+   1. [Glossary](# glossary)
+2. [General Linux Info](# linux)
+   1. [Linux Command Line and Bash Overview](#linux_intro)
+   2. [Basic Commands](#basic_commands)
+   3. Text Editors
+   4. External Resources
+3. HiPerGator Specific Information
+4. Earth Models
+   1. Introduction
+   2. CESM Install
+   3. E3SM Install
+
+# Introduction <a name="intro"></a>
 
 The primary goal of this document is to serve as a guide for porting the [CESM](https://www.cesm.ucar.edu/) and [E3SM](https://e3sm.org/) Earth models to HiPerGator. I mainly follow the official Earth model documentation, and add steps specific to HiPerGator as needed. Additionally, I'm including a section that can serve as an introduction to the Linux operating system, which many students have limited exposure to.
 
-## Glossary
+## Glossary <a name="glossary"></a>
 
 __CESM__ - Community Earth System Model. CESM is a fully-coupled, community maintained, global climate model that provides state-of-the-art computer simulations of the Earth's past, present, and future climate states.
 
 __E3SM__ - Energy Exascale Earth System Model. E3SM is the Department of Energy's climate model. Forked from CESM v1 and developed independently by the DOE, they describe E3SM as "an ongoing, state-of-the-science Earth system modeling, simulation, and prediction project that optimizes the use of DOE laboratory resources to meet the science needs of the nation and the mission needs of DOE."
 
+__CIME__ - Common Infrastructure for Modeling the Earth (pronounced “SEAM”) provides a Case Control System for configuring, compiling and executing Earth system models, data and stub model components, a driver and associated tools and libraries.
+
 __CLM__ - [Community Land Model](https://www.cesm.ucar.edu/models/clm). The land component used in CESM. It has the capability to model specific processes such as vegetation composition, heat transfer in soil, carbon-nitrogen cycling, canopy hydrology, and many more.
 
 __HPG__ - HiPerGator. The supercomputer used at UF. I'll use HPG and HiPerGator interchangeably throughout the documentation.
 
-## General Linux Information
+# General Linux Information <a name="linux"></a>
 
 If you are new to HiPerGator or using Linux I suggest you read through this section and utilize at least one of the resources linked below. While HiPerGator offers access to the system with a GUI or the ability to code via Jupyter notebooks, the Earth models will require you to use the command line exclusively, so it's important you are comfortable doing so.
 
-### Linux Command Line and Bash Overview
+### Linux Command Line and Bash Overview <a name="linux_intro"></a>
 
 The Linux command line, also referred to as the terminal or shell, is a text-based interface for interacting with the Linux operating system. It allows users to execute commands and perform various tasks efficiently, without relying on a graphical user interface.
 
@@ -29,7 +46,7 @@ The Linux command line, also referred to as the terminal or shell, is a text-bas
 **Bash:**
 Bash (Bourne Again Shell) is one of the most commonly used command line interpreters in Linux. It is the default shell for most Linux distributions (including HiPerGator) and provides a powerful scripting environment for automation and system administration tasks.
 
-### Overview of Basic Commands:
+### Basic Commands: <a name="basic_commands"></a>
 
 1. **pwd (Print Working Directory):**
    - Displays the current directory path.
@@ -93,7 +110,7 @@ Here are some resources to get started using the Linux command line and learn a 
 
 5. [ChatGPT](https://chat.openai.com/) is actually pretty good at BASH scripting and serving as an assistant for Linux commands.
 
-## HiPerGator Specific Information
+# HiPerGator Specific Information
 
 HiPerGator is not set up like a traditional personal computer. While Google and sites like [stack overflow](https://stackoverflow.com/) are great resources to use when you run into problems, remember to check HiPerGator's [documentation](https://help.rc.ufl.edu/doc/UFRC_Help_and_Documentation) first, as it will have information specific to our system.
 
@@ -103,7 +120,7 @@ If you are new to HiPerGator I would highly recommend reading through their [FAQ
 
 ### Module Systems and lmod
 
-The way programs are used on HiPerGator is different than a traditional computer. HiPerGator uses a program called `lmod` to be able to have multiple versions of the same software installed for different use cases. [Here is a good article](https://www.admin-magazine.com/HPC/Articles/Lmod-Alternative-Environment-Modules?utm_source=ADMIN+Newsletter&utm_campaign=HPC_Update_31_Lmod_Alternative_to_Environment_Modules_2013-01-30) on module systems and how they work. While the HiPerGator [documentation](https://help.rc.ufl.edu/doc/Modules) has great info, the full documentation for `lmod` can be found [here](https://lmod.readthedocs.io/en/latest/). 
+HiPerGator uses a program called `lmod` to be able to have multiple versions of the same software installed for different use cases. [Here is a good article](https://www.admin-magazine.com/HPC/Articles/Lmod-Alternative-Environment-Modules?utm_source=ADMIN+Newsletter&utm_campaign=HPC_Update_31_Lmod_Alternative_to_Environment_Modules_2013-01-30) that gives an overview of module systems and how they work. While the HiPerGator [documentation](https://help.rc.ufl.edu/doc/Modules) has great info that I suggest you read, the full documentation for `lmod` can be found [here](https://lmod.readthedocs.io/en/latest/). 
 
 ### Job Schedulers and slurm
 
@@ -111,25 +128,26 @@ Unlike a personal computer, HiPerGator is a collection of connected computers (c
 
 Please read the page on our scheduler [here](https://help.rc.ufl.edu/doc/HPG_Scheduling). The full documentation for the SLURM scheduler can be found [here](https://slurm.schedmd.com/documentation.html).
 
-## Earth Models
+# Earth Models
 
-Both Earth models (E3SM and CESM) use the same underlying infrastructure (CIME) to build and run cases (experiments). CIME generates the scripts necessary to download appropriate files, build the case, and push it to the scheduler to run on a compute node. In some sense, downloading and porting the Earth models is not so much about the specific Earth model, and more about getting CIME to interact with HiPerGator properly. The configuration files CIME uses are almost entirely the same (except for a couple extra parameters that E3SM uses). Ultimately the goal at UF is to have the Earth models installed in some shared directory on HiPerGator, but until then this can serve as a guide to do an install for your group. Going forward, I am assuming you are reasonably comfortable navigating HiPerGator and using basic Linux commands.
+Both Earth models (E3SM and CESM) use the same underlying infrastructure (CIME) to build and run cases (experiments). CIME generates the scripts necessary to download appropriate files, build the case, and push it to the scheduler to run on a compute node. In some sense, downloading and porting the Earth models is not so much about the specific Earth model, and more about getting CIME to interact with HiPerGator properly. The configuration files CIME uses are almost entirely the same (except for a couple extra parameters that E3SM uses). 
+
+Ultimately, the goal at UF is to have both the Earth models installed in some shared directory on HiPerGator, but until then this can serve as a guide to do an install for your research group. Going forward, I am assuming you are reasonably comfortable navigating HiPerGator and using basic Linux commands.
 
 ### Program Prerequisites
 
 __Default Loaded Modules__
 
-To download the external components of CESM (like CLM) we need a program called `subversion`. Additionally, the Earth models need to utilize `perl` scripts and `cmake`. While there is a `perl` library loaded by default, it is generally a better practice to specify which version we want to use. This will make future debugging easier. To load the programs needed, we can do something like:
+To download the external components (like CLM), as well as boundary conditions, we need a program called `subversion`. Additionally, the Earth models need to utilize `perl` scripts and `cmake`. While there is a `perl` library loaded by default, it is generally a better practice to specify which version we want to use. This will make future debugging easier. To load the programs needed, we can do something like:
 
-`$ module load perl/5.24.1`
+```bash
+module load perl/5.24.1
+module load subversion/1.9.7
+module load cmake/3.26.4
+module save default
+```
 
-`$ module load subversion/1.9.7`
-
-`$ module load cmake/3.26.4`
-
-`$ module save default`
-
-This will load the needed programs and save them as being loaded by default when you log in to HiPerGator.
+This will ensure that the needed programs are loaded by default when you log in to HiPerGator.
 
 __Netcdf__
 
@@ -137,94 +155,155 @@ Add info on netcdf, loading the modules, problems, where things go wrong, etc.
 
 ## Porting CESM
 
-CESM has [two primary releases](https://www.cesm.ucar.edu/models), the current development release (v2.2.2 at the time of this writing), and the production release (v2.1.5). We will be using the production release for our purposes. I am following the [CESM documentation](https://escomp.github.io/CESM/versions/cesm2.1/html/index.html), as well as the [CIME porting documentation](https://esmci.github.io/cime/versions/master/html/users_guide/porting-cime.html) while adding the steps needed to get this working on HiPerGator.
+CESM has [two primary releases](https://www.cesm.ucar.edu/models), the current development release (v2.2.2 at the time of this writing), and the production release (v2.1.5). We will be using the production release. I am following the [CESM documentation](https://escomp.github.io/CESM/versions/cesm2.1/html/index.html), as well as the [CIME porting documentation](https://esmci.github.io/cime/versions/master/html/users_guide/porting-cime.html) while adding the steps needed to get this working on HiPerGator.
 
 __Downloading the code__
 
-While the repository is not that large, it should be put on the `/blue` drive for fast access. It is completely up to the user and group how the file structure is organized. We decided to have a shared directory called `/earth_models` that contains the source code for the CESM and E3SM models, as well as the input data needed to run cases. Remember to make sure that all users in the group have read/write privileges to this directory.
+While the repository is not that large, it should be put on the `/blue` drive for fast access. It is completely up to the user and group how the file structure is organized. We decided to have a shared directory called `/earth_models` that contains the source code for the CESM and E3SM models, as well as the input data (which is rather large) needed to run cases. Remember to make sure that all users in the group have read/write privileges to this directory.
 
-1. Go to where your group's Earth models will be installed.
+Follow directions in the [CESM documentation](https://escomp.github.io/CESM/versions/cesm2.1/html/downloading_cesm.html) to clone the repository and checkout the external components.
 
-`$ cd /blue/GROUP/earth_models`
+```bash
+# cd into the directory you want your earth models installed
+cd /blue/GROUP/earth_models
 
-2. Follow directions in the [CESM documentation](https://escomp.github.io/CESM/versions/cesm2.1/html/downloading_cesm.html) to clone the repository and checkout the external components.
+# clone the cesm repository
+git clone -b release-cesm2.1.5 https://github.com/ESCOMP/CESM.git cesm215
 
-3. By default, CESM downloads the most recent version of the CIME code, which unfortunately causes some bugs. We can fix that by checking out an older, more stable version.
+# cd into your cesm directory
+cd cesm215
 
-`$ cd cime`
+# download the external components
+./manage_externals/checkout_externals
 
-`$ git pull origin maint-5.6`
+# check that the components were installed correctly
+./manage_externals/checkout_externals -S
+```
 
-`$ git checkout maint-5.6`
+The last command should output something like:
 
-If you run `./checkout_externals -S` after changing the CIME branch, it may show an error that CIME is not using the correct version. You can ignore this.  
+```bash
+Processing externals description file : Externals.cfg
+Processing externals description file : Externals_CLM.cfg
+Processing externals description file : Externals_POP.cfg
+Processing externals description file : Externals_CISM.cfg
+Checking status of externals: clm, fates, ptclm, mosart, ww3, cime, cice, pop, cvmix, marbl, cism, source_cism, rtm, cam,
+    ./cime
+    ./components/cam
+    ./components/cice
+    ./components/cism
+    ./components/cism/source_cism
+    ./components/clm
+    ./components/clm/src/fates
+    ./components/clm/tools/PTCLM
+    ./components/mosart
+    ./components/pop
+    ./components/pop/externals/CVMix
+    ./components/pop/externals/MARBL
+    ./components/rtm
+    ./components/ww3
+```
+
+If there were issues with any of the components, you would see an error:
+
+```bash
+e-  ./components/clm
+```
+
+By default, CESM downloads the most recent version of the CIME code, which unfortunately causes some bugs. We can fix that by checking out an older, more stable version.
+
+```bash
+cd cime
+git pull origin maint-5.6
+git checkout maint-5.6
+```
+
+If you run `./checkout_externals -S` after changing the CIME branch, it may show an error that CIME is not using the correct version. You can ignore this.
 
 __Install the cprnc tool__ 
 
 While this is _technically_ optional, [cprnc](https://github.com/ESMCI/cprnc) is a tool used to compare netcdf files. We installed this in `/blue/GROUP/earth_models` as it is a utility shared by both CESM and E3SM.
 
-1. Go to the installation directory
+Make sure `cmake` a compiler suite, and the corresponding `netcdf` libraries are loaded.
 
-`$ git clone https://github.com/ESMCI/cprnc.git`
+```bash
+module gcc/12.2.0 openmpi/4.1.5 netcdf-c/4.9.2
+module gcc/12.2.0 openmpi/4.1.5 netcdf-f/4.6.1
 
-`$ cd cprnc`
+# check and make sure all modules are loaded
+module list
+```
 
-2. You need to make sure `cmake`, a compiler suite (intel or gnu), and netcdf libraries are loaded. For the gnu compiler built netcdf libraries:
+Clone the repository and `cd` into it.
 
-`$ module gcc/12.2.0 openmpi/4.1.5 netcdf-c/4.9.2`
+```bash
+git clone https://github.com/ESMCI/cprnc.git cprnc
+cd cprnc
+```
 
-`$ module gcc/12.2.0 openmpi/4.1.5 netcdf-f/4.6.1`
+Follow directions in the README. `cprnc` is a fortran-90 program, and it may throw an error that it can't find the `netcdf-c` libraries, but this doesn't seem to matter as far as building the executable.
 
-Follow directions in the README. `cprnc` is a fortran program, and it may throw an error that it can't find the netcdf-c files, but this doesn't seem to matter.
-
-`$ mkdir bld`
-
-`$ cd bld/`
-
-`$ cmake ../`
-
-`$ make`
+```bash
+mkdir bld
+cd bld
+cmake ../
+make
+```
 
 The executable will be located at `/blue/GROUP/earth_models/cprnc/bld/cprnc`.
 
 ### Porting and Validating CIME
 
-In general, you can just follow the directions [here](https://esmci.github.io/cime/versions/master/html/users_guide/porting-cime.html). However, it's not necessary to validate your MPI environment. Additionally, in the first part of step 6.4 they discuss two methods for defining the machine. We will be using option 2, storing configuration files in your home directory.
+HPG has all the appropriate software and libraries installed and checked for functionality. However, we have to set up three configuration files to ensure CIME knows how to access all the resources it needs. There are two ways we can do this.
 
-__Set up the config files__
+1. You can edit **$CIMEROOT/config/$model/machines/config_machines.xml** and add an appropriate section for your machine.
+2. You can use your **$HOME/.cime** directory (see [CIME config and hooks](https://esmci.github.io/cime/versions/master/html/users_guide/cime-customize.html#customizing-cime)). In particular, you can create a **$HOME/.cime/config_machines.xml** file with the definition for your machine. A template to create this definition is provided in **$CIMEROOT/config/xml_schemas/config_machines_template.xml**. More details are provided in the template file. In addition, if you have a batch system, you will also need to add a **config_batch.xml** file to your **$HOME/.cime** directory. All files in **$HOME/.cime/** are appended to the xml objects that are read into memory from the **$CIME/config/$model**, where **$model** is either `e3sm` or `cesm`.
 
-These are stored in a dot folder in your home directory. `~/.cime` and are appended to the default config files in the Earth models.
+We are using method two, as there some parameters in the config files that need to be defined by the user, such as their email address and preferences, preferred file directory structure, etc. Most parameters in the config files will be the same for every research group at UF, there are detailed notes throughout the files explaining what each entry is for as well as which parameters to change. The files are available on this github repository, and should be saved in `/home/$USER/.cime`. You should just be able to do a `git checkout` in your home directory, then modify the appropriate parameters.
 
-* The directories for input data need to be created manually.
+```bash
+# make sure your in your home directory
+cd
 
-__Initial testing__
+# checkout the files
+git checkout -r URL_HERE .cime
 
-Once the config files are setup, we need to run regression tests to ensure things are working correctly and CIME knows where to locate things on HiPerGator. The regression tests script will test various parameters of the Earth model in isolation, then send a dozen or two small cases to the scheduler to be run. This script can be run from the login node.
+# make sure the files are there
+ls .cime
+```
 
-`$ /blue/GROUP/earth_models/CESM/cime/scripts/tests/scripts_regression_tests.py`
+__ Testing and Verifying the Port__
+
+Once the config files are setup, we need to run regression tests to ensure things are working correctly and CIME knows where to locate things on HiPerGator. The regression tests script will test various parameters of the Earth model in isolation, then send a dozen or two small cases to the scheduler to be run. This script is not resource intensive and can be run from a login node.
 
 You'll need python to run the script. Version 3.11 seems to work just fine.
 
-`$ module load python/3.11`
+```bash
+# load python
+module load python/3.11
 
-You can run the script with several options. Use the `--help` tag when running the script for the full list. For example, if you want to run the script and test the intel compilers, with a specific output directory, you could do something like:
+# go to the location of the regression tests
+cd /blue/GROUP/earth_models/CESM/cime/scripts/tests
+```
 
-`$ ./scripts_regression_tests.py --compiler intel --test-root PATH_TO_OUTPUT_DIR`
+You can run the script with several options. Use the `--help` tag when running the script for the full list. For example, if you want to run the script and test the intel compilers, using a specific output directory, you could do something like:
+
+```
+./scripts_regression_tests.py --compiler intel --test-root PATH_TO_OUTPUT_DIR
+```
 
 By default, the test output will be saved in the `$CIME_OUTPUT_ROOT` directory defined in your `config_machines.xml` file.
 
-These tests can take up to an hour or two to finish everything (depending how busy your scheduler is as well as how many resources your group has paid for).
+These tests can take up to an hour or two to finish everything (depending how busy your scheduler is as well as how many cores your group has paid for).
 
-Once all these are passed we can move onto the ECT tests. As as aside note, when all the tests are run, occasionally you get some failures on individual components. They are usually the Q_TestBlessTestResults  T_TestRunRestart or Z_FullSystem. But if you run the test individually, and they pass, overall your system should be good.
+Once all these tests are passed we can move onto the ECT tests. 
+
+__Note:__ When all the tests are run at once, occasionally you get some failures on individual components. They are usually the Q_TestBlessTestResults  T_TestRunRestart or Z_FullSystem. But if you run the test individually, and they pass, overall your system should be good.
 
 __ECT Tests__
 
 Follow the guide [here](https://www.cesm.ucar.edu/models/cesm2/python-tools) in order to complete these tests.
 
-To run the script to create these tests we have to load an older version of python.cd
+To run the script to create these tests we have to load an older version of python
 
 `$ module load python-core/2.7.14`
-
-__add conda environment section__
-
-Not sure the best way to do this. I should look into exporting a yum package to be able to install my environment for people to use.0
