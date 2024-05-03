@@ -12,26 +12,27 @@
    1. Introduction
    2. CESM Install
    3. E3SM Install
+5. [Single Point Cases](#singe point)
 
 # Introduction <a name="intro"></a>
 
-The primary goal of this document is to serve as a guide for porting the [CESM](https://www.cesm.ucar.edu/) and [E3SM](https://e3sm.org/) Earth models to HiPerGator. I mainly follow the official Earth model documentation, and add steps specific to HiPerGator as needed. Additionally, I'm including a section that can serve as an introduction to the Linux operating system, which many students have limited exposure to.
+The primary goal of this document is to serve as a guide for porting the [CESM](https://www.cesm.ucar.edu/) and [E3SM](https://e3sm.org/) Earth models to HiPerGator. I follow the official documentation for each Earth model, and add steps specific to HiPerGator as needed. Additionally, I'm including a section that can serve as an introduction to using Linux, which many students have limited exposure to.
 
 ## Glossary <a name="glossary"></a>
 
 __CESM__ - Community Earth System Model. CESM is a fully-coupled, community maintained, global climate model that provides state-of-the-art computer simulations of the Earth's past, present, and future climate states.
 
-__E3SM__ - Energy Exascale Earth System Model. E3SM is the Department of Energy's climate model. Forked from CESM v1 and developed independently by the DOE, they describe E3SM as "an ongoing, state-of-the-science Earth system modeling, simulation, and prediction project that optimizes the use of DOE laboratory resources to meet the science needs of the nation and the mission needs of DOE."
-
 __CIME__ - Common Infrastructure for Modeling the Earth (pronounced “SEAM”) provides a Case Control System for configuring, compiling and executing Earth system models, data and stub model components, a driver and associated tools and libraries.
 
 __CLM__ - [Community Land Model](https://www.cesm.ucar.edu/models/clm). The land component used in CESM. It has the capability to model specific processes such as vegetation composition, heat transfer in soil, carbon-nitrogen cycling, canopy hydrology, and many more.
+
+__E3SM__ - Energy Exascale Earth System Model. E3SM is the Department of Energy's climate model. Forked from CESM v1 and developed independently by the DOE, they describe E3SM as "an ongoing, state-of-the-science Earth system modeling, simulation, and prediction project that optimizes the use of DOE laboratory resources to meet the science needs of the nation and the mission needs of DOE."
 
 __HPG__ - HiPerGator. The supercomputer used at UF. I'll use HPG and HiPerGator interchangeably throughout the documentation.
 
 # General Linux Information <a name="linux"></a>
 
-If you are new to HiPerGator or using Linux I suggest you read through this section and utilize at least one of the resources linked below. While HiPerGator offers access to the system with a GUI or the ability to code via Jupyter notebooks, the Earth models will require you to use the command line exclusively, so it's important you are comfortable doing so.
+If you are new to HiPerGator or Linux I suggest you read through this section and utilize at least one of the resources linked below. While HiPerGator offers access to the system with a GUI or the ability to code via Jupyter notebooks, the Earth models will require you to use the command line exclusively, so it's important you are comfortable doing so.
 
 ### Linux Command Line and Bash Overview <a name="linux_intro"></a>
 
@@ -92,7 +93,7 @@ __WARNING__ The default text editor on Linux is usually `vim`. There may be a ti
 
 ### External Resources
 
-Here are some resources to get started using the Linux command line and learn a bit more about what is going on "under the hood." You don't need to memorize everything in these links, but they can serve as a good starting point.
+Here are some resources to get started using the Linux command line, and learn a bit more about what is going on "under the hood." You don't need to memorize everything in these links, but they can serve as a good starting point.
 
 1. https://linuxjourney.com/
 
@@ -108,7 +109,7 @@ Here are some resources to get started using the Linux command line and learn a 
 
 4. YouTube has plenty of tutorials. [Here's a good one](https://www.youtube.com/watch?v=s3ii48qYBxA) that serves as an introduction to the command line.
 
-5. [ChatGPT](https://chat.openai.com/) is actually pretty good at BASH scripting and serving as an assistant for Linux commands.
+5. [ChatGPT](https://chat.openai.com/) is actually pretty good at BASH scripting and serving as an interactive assistant.
 
 # HiPerGator Specific Information
 
@@ -130,7 +131,7 @@ Please read the page on our scheduler [here](https://help.rc.ufl.edu/doc/HPG_Sch
 
 # Earth Models
 
-Both Earth models (E3SM and CESM) use the same underlying infrastructure (CIME) to build and run cases (experiments). CIME generates the scripts necessary to download appropriate files, build the case, and push it to the scheduler to run on a compute node. In some sense, downloading and porting the Earth models is not so much about the specific Earth model, and more about getting CIME to interact with HiPerGator properly. The configuration files CIME uses are almost entirely the same (except for a couple extra parameters that E3SM uses). 
+Both Earth models (E3SM and CESM) use the same underlying infrastructure (CIME) to build and run cases (experiments). CIME generates the scripts necessary to download appropriate files, build the case, and push it to the scheduler to run on a compute node. In some sense, downloading and porting the Earth models is not so much about the specific Earth model, and more about getting CIME to interact with HiPerGator properly. The configuration files CIME uses are almost entirely the same (except for a couple extra parameters for E3SM). 
 
 Ultimately, the goal at UF is to have both the Earth models installed in some shared directory on HiPerGator, but until then this can serve as a guide to do an install for your research group. Going forward, I am assuming you are reasonably comfortable navigating HiPerGator and using basic Linux commands.
 
@@ -149,22 +150,18 @@ module save default
 
 This will ensure that the needed programs are loaded by default when you log in to HiPerGator.
 
-__Netcdf__
-
-Add info on netcdf, loading the modules, problems, where things go wrong, etc.
-
 ## Porting CESM
 
 CESM has [two primary releases](https://www.cesm.ucar.edu/models), the current development release (v2.2.2 at the time of this writing), and the production release (v2.1.5). We will be using the production release. I am following the [CESM documentation](https://escomp.github.io/CESM/versions/cesm2.1/html/index.html), as well as the [CIME porting documentation](https://esmci.github.io/cime/versions/master/html/users_guide/porting-cime.html) while adding the steps needed to get this working on HiPerGator.
 
 __Downloading the code__
 
-While the repository is not that large, it should be put on the `/blue` drive for fast access. It is completely up to the user and group how the file structure is organized. We decided to have a shared directory called `/earth_models` that contains the source code for the CESM and E3SM models, as well as the input data (which is rather large) needed to run cases. Remember to make sure that all users in the group have read/write privileges to this directory.
+While the repository is not that large, it should be put on the `/blue` drive for fast access. It is completely up to the user and group how the file structure is organized. We decided to have a shared directory called `/earth_models` that contains the source code for the CESM and E3SM models, as well as the input data directory (which can get rather large). Remember to make sure that all users in the group have read/write privileges to this directory.
 
 Follow directions in the [CESM documentation](https://escomp.github.io/CESM/versions/cesm2.1/html/downloading_cesm.html) to clone the repository and checkout the external components.
 
 ```bash
-# cd into the directory you want your earth models installed
+# cd into the directory you want cesm installed
 cd /blue/GROUP/earth_models
 
 # clone the cesm repository
@@ -222,16 +219,13 @@ If you run `./checkout_externals -S` after changing the CIME branch, it may show
 
 __Install the cprnc tool__ 
 
-While this is _technically_ optional, [cprnc](https://github.com/ESMCI/cprnc) is a tool used to compare netcdf files. We installed this in `/blue/GROUP/earth_models` as it is a utility shared by both CESM and E3SM.
+While this is _technically_ optional, you should download [cprnc](https://github.com/ESMCI/cprnc), a tool used to compare netcdf files. We installed this in `/blue/GROUP/earth_models` as it is a utility shared by both CESM and E3SM.
 
 Make sure `cmake` a compiler suite, and the corresponding `netcdf` libraries are loaded.
 
 ```bash
-module gcc/12.2.0 openmpi/4.1.5 netcdf-c/4.9.2
-module gcc/12.2.0 openmpi/4.1.5 netcdf-f/4.6.1
-
-# check and make sure all modules are loaded
-module list
+module load gcc/12.2.0 openmpi/4.1.5 netcdf-c/4.9.2
+module load gcc/12.2.0 openmpi/4.1.5 netcdf-f/4.6.1
 ```
 
 Clone the repository and `cd` into it.
@@ -254,15 +248,15 @@ The executable will be located at `/blue/GROUP/earth_models/cprnc/bld/cprnc`.
 
 ### Porting and Validating CIME
 
-HPG has all the appropriate software and libraries installed and checked for functionality. However, we have to set up three configuration files to ensure CIME knows how to access all the resources it needs. There are two ways we can do this.
+HPG has all the appropriate software and libraries installed and checked for functionality. However, we have to set up three configuration files to ensure CIME knows how to access the resources it needs. There are two ways we can do this.
 
 1. You can edit **$CIMEROOT/config/$model/machines/config_machines.xml** and add an appropriate section for your machine.
 2. You can use your **$HOME/.cime** directory (see [CIME config and hooks](https://esmci.github.io/cime/versions/master/html/users_guide/cime-customize.html#customizing-cime)). In particular, you can create a **$HOME/.cime/config_machines.xml** file with the definition for your machine. A template to create this definition is provided in **$CIMEROOT/config/xml_schemas/config_machines_template.xml**. More details are provided in the template file. In addition, if you have a batch system, you will also need to add a **config_batch.xml** file to your **$HOME/.cime** directory. All files in **$HOME/.cime/** are appended to the xml objects that are read into memory from the **$CIME/config/$model**, where **$model** is either `e3sm` or `cesm`.
 
-We are using method two, as there some parameters in the config files that need to be defined by the user, such as their email address and preferences, preferred file directory structure, etc. Most parameters in the config files will be the same for every research group at UF, there are detailed notes throughout the files explaining what each entry is for as well as which parameters to change. The files are available on this github repository, and should be saved in `/home/$USER/.cime`. You should just be able to do a `git checkout` in your home directory, then modify the appropriate parameters.
+We are using method two, as there some parameters in the config files that need to be defined by the user, such as their email address, preferred IO directory structure, etc. I have created config files that are set up for hpg. The files are available on this github repository, and should be saved in `/home/$USER/.cime`. You should just be able to do a `git checkout` in your home directory, then modify the appropriate parameters. Most parameters in the config files will be the same for every research group at UF. There are detailed comments in the config files explaining what needs to be changed for each user.
 
 ```bash
-# make sure your in your home directory
+# make sure you're in your home directory
 cd
 
 # checkout the files
@@ -272,9 +266,9 @@ git checkout -r URL_HERE .cime
 ls .cime
 ```
 
-__ Testing and Verifying the Port__
+__Testing and Verifying the Port__
 
-Once the config files are setup, we need to run regression tests to ensure things are working correctly and CIME knows where to locate things on HiPerGator. The regression tests script will test various parameters of the Earth model in isolation, then send a dozen or two small cases to the scheduler to be run. This script is not resource intensive and can be run from a login node.
+Once the config files are setup, we need to run regression tests to ensure things are working correctly. The regression tests script will test various parameters of the Earth model in isolation, then send a dozen or two small cases to the scheduler to be run. This script is not resource intensive and can be run from a login node.
 
 You'll need python to run the script. Version 3.11 seems to work just fine.
 
@@ -286,7 +280,7 @@ module load python/3.11
 cd /blue/GROUP/earth_models/CESM/cime/scripts/tests
 ```
 
-You can run the script with several options. Use the `--help` tag when running the script for the full list. For example, if you want to run the script and test the intel compilers, using a specific output directory, you could do something like:
+You can run the script with several options. Use the `--help` tag when running the script for the full list of them. For example, if you want to run the script and test the intel compilers, using a specific output directory, you could do something like:
 
 ```
 ./scripts_regression_tests.py --compiler intel --test-root PATH_TO_OUTPUT_DIR
@@ -298,12 +292,68 @@ These tests can take up to an hour or two to finish everything (depending how bu
 
 Once all these tests are passed we can move onto the ECT tests. 
 
-__Note:__ When all the tests are run at once, occasionally you get some failures on individual components. They are usually the Q_TestBlessTestResults  T_TestRunRestart or Z_FullSystem. But if you run the test individually, and they pass, overall your system should be good.
+__Note:__ When all the tests are run at once, occasionally you get failures on individual components. They are usually the Q_TestBlessTestResults  T_TestRunRestart or Z_FullSystem tests. But if you rerun these tests individually, and they pass, overall your system should be good.
 
 __ECT Tests__
 
-Follow the guide [here](https://www.cesm.ucar.edu/models/cesm2/python-tools) in order to complete these tests.
+Follow the guide [here](https://www.cesm.ucar.edu/models/cesm2/python-tools) in order to complete these tests. You'll just need to change the case output location, machine, and compiler name to reflect your setup. I should note that to run the script to create these tests we have to load an older version of python.
 
-To run the script to create these tests we have to load an older version of python
+```bash
+module load python-core/2.7.14
+```
 
-`$ module load python-core/2.7.14`
+Additionally, to use the `addmetadata` script we need the `nco` tool `ncks`. The version available on hipergator is not new enough so we will have to create a conda environment and install the tool ourselves. Instructions for using conda on hipergator can be found [here](https://help.rc.ufl.edu/doc/Conda). You just need to download the most recent version of `nco` with something like `mamba install nco`.
+
+# Single Point Cases<a name="single point"></a>
+
+Following the instructions [here](https://escomp.github.io/ctsm-docs/versions/release-clm5.0/html/users_guide/running-single-points/running-pts_mode-configurations.html), we can run the clm model on a single grid cell by specifying a latitude and longitude. However, the instructions on the clm website seem to be a bit outdated. CIME no longer supports the `-pts_lat` or `-pts_lon`  arguments with the `create_newcase` script, also multi-character arguments should begin with `--` rather than `-`.  We can still run on a single point by creating a new case, then changing the appropriate variables before building the executable.
+
+The compset used to test the Ordway Swisher Biological Station has the full name `1850_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV` however the short name given (`I1850Clm50BSpCru`) is not found in our supported compset lists. I think you added an extra "B" in the short compset name. We can use the `query_config` script to find supported compsets.
+
+```bash
+# cd to cime/scripts 
+cd /blue/gerber/earth_models/cime/scripts
+
+# find the shortname for the compset
+./query_config --compsets all | grep 1850_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV
+```
+
+Which outputs the following to the terminal.
+
+```
+I1850Clm50SpCru      : 1850_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV
+```
+
+To create our case we can do something like.
+
+```bash
+./create_newcase --case /blue/gerber/cdevaneprugh/cases/testPTS_OSBS --res f19_g17 --compset I1850Clm50SpCru
+
+# cd to the case directory
+cd /blue/gerber/cdevaneprugh/cases/testPTS_OSBS
+
+# change variables to run on a single point
+./xmlchange PTS_MODE=TRUE, PTS_LAT=29.7, PTS_LON=-82.0
+./xmlchange CLM_FORCE_COLDSTART=on, RUN_TYPE=startup
+
+# change variables to use a single core and adjust wall time
+./xmlchange NTASKS=1
+./xmlchange JOB_WALLCLOCK_TIME=6:00:00
+
+# setup, build, and submit the case as usual
+./case.setup
+./case.build
+./case.submit
+```
+
+Unfortunately, there is some issue with downloading the input data. It outputs this after submitting the case.
+
+```bash
+Loading input file list: 'Buildconf/clm.input_data_list'
+Model clm no file specified for finidat
+Checking server None with protocol None
+Setting resource.RLIMIT_STACK to -1 from (-1, -1)
+Client protocol None not enabled
+ERROR: Could not find all inputdata on any server
+```
+
