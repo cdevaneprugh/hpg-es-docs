@@ -1,18 +1,25 @@
 # Table of Contents
 
-1. [Introduction](# intro)
-   1. [Glossary](# glossary)
-2. [General Linux Info](# linux)
+1. [Introduction](#intro)
+   1. [Glossary](#glossary)
+2. [General Linux Info](#linux_title)
    1. [Linux Command Line and Bash Overview](#linux_intro)
-   2. [Basic Commands](#basic_commands)
-   3. Text Editors
-   4. External Resources
-3. HiPerGator Specific Information
-4. Earth Models
-   1. Introduction
-   2. CESM Install
-   3. E3SM Install
-5. [Single Point Cases](#singe point)
+   2. [Basic Commands](#linux_commands)
+   3. [Text Editors](#linux_editors)
+   4. [External Resources](#linux_resources)
+3. [HiPerGator Specific Information](#hpg_title)
+   1. [Module Systems](#hpg_lmod)
+   2. [Job Schedulers](#hpg_slurm)
+
+4. [Earth Models](#esm_title)
+   1. [Prerequisites](#esm_prereqs)
+   2. [Porting CESM](#cesm_port)
+      1. [Downloading CESM](#cesm_download)
+      2. [CPRNC Install](#cprnc_install)
+   3. [Porting and Validating CIME](#cime_port)
+      1. [Regression Testing](#reg_tests)
+      2. [Ensemble Consistency Testing](#ect)
+5. [Single Point Cases](#pts_mode)
 
 # Introduction <a name="intro"></a>
 
@@ -30,11 +37,11 @@ __E3SM__ - Energy Exascale Earth System Model. E3SM is the Department of Energy'
 
 __HPG__ - HiPerGator. The supercomputer used at UF. I'll use HPG and HiPerGator interchangeably throughout the documentation.
 
-# General Linux Information <a name="linux"></a>
+# General Linux Information <a name="linux_title"></a>
 
 If you are new to HiPerGator or Linux I suggest you read through this section and utilize at least one of the resources linked below. While HiPerGator offers access to the system with a GUI or the ability to code via Jupyter notebooks, the Earth models will require you to use the command line exclusively, so it's important you are comfortable doing so.
 
-### Linux Command Line and Bash Overview <a name="linux_intro"></a>
+## Linux Command Line and Bash Overview <a name="linux_intro"></a>
 
 The Linux command line, also referred to as the terminal or shell, is a text-based interface for interacting with the Linux operating system. It allows users to execute commands and perform various tasks efficiently, without relying on a graphical user interface.
 
@@ -47,7 +54,7 @@ The Linux command line, also referred to as the terminal or shell, is a text-bas
 **Bash:**
 Bash (Bourne Again Shell) is one of the most commonly used command line interpreters in Linux. It is the default shell for most Linux distributions (including HiPerGator) and provides a powerful scripting environment for automation and system administration tasks.
 
-### Basic Commands: <a name="basic_commands"></a>
+## Basic Commands: <a name="linux_commands"></a>
 
 1. **pwd (Print Working Directory):**
    - Displays the current directory path.
@@ -85,13 +92,13 @@ Bash (Bourne Again Shell) is one of the most commonly used command line interpre
     - Example: `command1 | command2` (output of `command1` is used as input for `command2`).
     - Example: `ls Documents | grep my_file` Will search the "Documents" directory for files titled "my_file." You could also add the `-r` flag to the `grep` command to search within each file for the search term.
 
-### Text Editors
+## Text Editors<a name="linux_editors"></a>
 
 The three main text editors used on Linux are [Vim](https://en.wikipedia.org/wiki/Vim_(text_editor)), [Emacs](https://en.wikipedia.org/wiki/GNU_Emacs), and [Nano](https://en.wikipedia.org/wiki/GNU_nano). `nano` is the most basic, and easiest to use. `vim` and `emacs` are extremely customizable, but have a substantially steeper learning curve. Between `vim` and `emacs`, `vim` is arguably the most difficult to get comfortable with, but is powerful once you do. If you decide you are brave enough to try it, sites like [openvim](https://www.openvim.com/) or running the command `vimtutor` (which starts an interactive tutorial) on any Linux machine are good places to start. Additionally [here](https://vim.rtorr.com/) is a cheat sheet of `vim` commands that serve as a nice reference.
 
 __WARNING__ The default text editor on Linux is usually `vim`. There may be a time when you accidentally open a file in `vim` and can't figure out how to exit the program. This may sound silly, but I promise you, the jokes about `vim` being confusing are endless in the Linux community. If you do find yourself trapped in and need to exit. Hit the `esc` key, then type `:q!` and hit `enter`. This will exit whatever file you got yourself into without saving any changes. If you _would_ like to make a quick change to the file you got into, hit `esc`, followed by the `i` key to enter "insert" mode. At this point you can type up whatever you need (use the arrow keys for navigation). To save, use `esc` to exit insert mode, then type `:wq` and hit `enter`. This will write the file (`w`) then quit out of the editor (`q`). 
 
-### External Resources
+## External Resources<a name="linux_resources"></a>
 
 Here are some resources to get started using the Linux command line, and learn a bit more about what is going on "under the hood." You don't need to memorize everything in these links, but they can serve as a good starting point.
 
@@ -111,7 +118,7 @@ Here are some resources to get started using the Linux command line, and learn a
 
 5. [ChatGPT](https://chat.openai.com/) is actually pretty good at BASH scripting and serving as an interactive assistant.
 
-# HiPerGator Specific Information
+# HiPerGator Specific Information<a name="hpg_title"></a>
 
 HiPerGator is not set up like a traditional personal computer. While Google and sites like [stack overflow](https://stackoverflow.com/) are great resources to use when you run into problems, remember to check HiPerGator's [documentation](https://help.rc.ufl.edu/doc/UFRC_Help_and_Documentation) first, as it will have information specific to our system.
 
@@ -119,23 +126,23 @@ Additionally, when using Linux, you should build the habit of using the commands
 
 If you are new to HiPerGator I would highly recommend reading through their [FAQ](https://www.rc.ufl.edu/documentation/frequently-asked-questions/),  [Getting Started](https://help.rc.ufl.edu/doc/Getting_Started) page, and watching all of the available training videos provided in the [documentation](https://help.rc.ufl.edu/doc/Training_Videos).
 
-### Module Systems and lmod
+## Module Systems and lmod<a name="hpg_lmod"></a>
 
 HiPerGator uses a program called `lmod` to be able to have multiple versions of the same software installed for different use cases. [Here is a good article](https://www.admin-magazine.com/HPC/Articles/Lmod-Alternative-Environment-Modules?utm_source=ADMIN+Newsletter&utm_campaign=HPC_Update_31_Lmod_Alternative_to_Environment_Modules_2013-01-30) that gives an overview of module systems and how they work. While the HiPerGator [documentation](https://help.rc.ufl.edu/doc/Modules) has great info that I suggest you read, the full documentation for `lmod` can be found [here](https://lmod.readthedocs.io/en/latest/). 
 
-### Job Schedulers and slurm
+## Job Schedulers and slurm<a name="hpg_slurm"></a>
 
 Unlike a personal computer, HiPerGator is a collection of connected computers (called nodes) that share resources. The node that you login to (unsurprisingly called a login node) has a limited amount of resources, and is generally used for tasks like writing code, file management, and very light jobs. As such, you will submit more computationally "expensive" jobs to the SLURM scheduler to run on the dedicated compute nodes.
 
 Please read the page on our scheduler [here](https://help.rc.ufl.edu/doc/HPG_Scheduling). The full documentation for the SLURM scheduler can be found [here](https://slurm.schedmd.com/documentation.html).
 
-# Earth Models
+# Earth Models<a name="esm_title"></a>
 
 Both Earth models (E3SM and CESM) use the same underlying infrastructure (CIME) to build and run cases (experiments). CIME generates the scripts necessary to download appropriate files, build the case, and push it to the scheduler to run on a compute node. In some sense, downloading and porting the Earth models is not so much about the specific Earth model, and more about getting CIME to interact with HiPerGator properly. The configuration files CIME uses are almost entirely the same (except for a couple extra parameters for E3SM). 
 
 Ultimately, the goal at UF is to have both the Earth models installed in some shared directory on HiPerGator, but until then this can serve as a guide to do an install for your research group. Going forward, I am assuming you are reasonably comfortable navigating HiPerGator and using basic Linux commands.
 
-### Program Prerequisites
+## Prerequisites<a name="esm_prereqs"></a>
 
 __Default Loaded Modules__
 
@@ -150,11 +157,11 @@ module save default
 
 This will ensure that the needed programs are loaded by default when you log in to HiPerGator.
 
-## Porting CESM
+## Porting CESM<a name="cesm_port"></a>
 
 CESM has [two primary releases](https://www.cesm.ucar.edu/models), the current development release (v2.2.2 at the time of this writing), and the production release (v2.1.5). We will be using the production release. I am following the [CESM documentation](https://escomp.github.io/CESM/versions/cesm2.1/html/index.html), as well as the [CIME porting documentation](https://esmci.github.io/cime/versions/master/html/users_guide/porting-cime.html) while adding the steps needed to get this working on HiPerGator.
 
-__Downloading the code__
+### Downloading the code<a name="cesm_download"></a>
 
 While the repository is not that large, it should be put on the `/blue` drive for fast access. It is completely up to the user and group how the file structure is organized. We decided to have a shared directory called `/earth_models` that contains the source code for the CESM and E3SM models, as well as the input data directory (which can get rather large). Remember to make sure that all users in the group have read/write privileges to this directory.
 
@@ -217,7 +224,7 @@ git checkout maint-5.6
 
 If you run `./checkout_externals -S` after changing the CIME branch, it may show an error that CIME is not using the correct version. You can ignore this.
 
-__Install the cprnc tool__ 
+### Install the cprnc tool<a name="cprnc_install"></a>
 
 While this is _technically_ optional, you should download [cprnc](https://github.com/ESMCI/cprnc), a tool used to compare netcdf files. We installed this in `/blue/GROUP/earth_models` as it is a utility shared by both CESM and E3SM.
 
@@ -246,7 +253,7 @@ make
 
 The executable will be located at `/blue/GROUP/earth_models/cprnc/bld/cprnc`.
 
-### Porting and Validating CIME
+## Porting and Validating CIME<a name="cime_port"></a>
 
 HPG has all the appropriate software and libraries installed and checked for functionality. However, we have to set up three configuration files to ensure CIME knows how to access the resources it needs. There are two ways we can do this.
 
@@ -266,7 +273,7 @@ git checkout -r URL_HERE .cime
 ls .cime
 ```
 
-__Testing and Verifying the Port__
+### Regression Testing<a name="reg_tests"></a>
 
 Once the config files are setup, we need to run regression tests to ensure things are working correctly. The regression tests script will test various parameters of the Earth model in isolation, then send a dozen or two small cases to the scheduler to be run. This script is not resource intensive and can be run from a login node.
 
@@ -294,7 +301,7 @@ Once all these tests are passed we can move onto the ECT tests.
 
 __Note:__ When all the tests are run at once, occasionally you get failures on individual components. They are usually the Q_TestBlessTestResults  T_TestRunRestart or Z_FullSystem tests. But if you rerun these tests individually, and they pass, overall your system should be good.
 
-__ECT Tests__
+### Ensemble Consistency Testing<a name="ect"></a>
 
 Follow the guide [here](https://www.cesm.ucar.edu/models/cesm2/python-tools) in order to complete these tests. You'll just need to change the case output location, machine, and compiler name to reflect your setup. I should note that to run the script to create these tests we have to load an older version of python.
 
@@ -304,7 +311,7 @@ module load python-core/2.7.14
 
 Additionally, to use the `addmetadata` script we need the `nco` tool `ncks`. The version available on hipergator is not new enough so we will have to create a conda environment and install the tool ourselves. Instructions for using conda on hipergator can be found [here](https://help.rc.ufl.edu/doc/Conda). You just need to download the most recent version of `nco` with something like `mamba install nco`.
 
-# Single Point Cases<a name="single point"></a>
+# Single Point Cases<a name="pts_mode"></a>
 
 Following the instructions [here](https://escomp.github.io/ctsm-docs/versions/release-clm5.0/html/users_guide/running-single-points/running-pts_mode-configurations.html), we can run the clm model on a single grid cell by specifying a latitude and longitude. However, the instructions on the clm website seem to be a bit outdated. CIME no longer supports the `-pts_lat` or `-pts_lon`  arguments with the `create_newcase` script, also multi-character arguments should begin with `--` rather than `-`.  We can still run on a single point by creating a new case, then changing the appropriate variables before building the executable.
 
@@ -333,12 +340,12 @@ To create our case we can do something like.
 cd /blue/gerber/cdevaneprugh/cases/testPTS_OSBS
 
 # change variables to run on a single point
-./xmlchange PTS_MODE=TRUE, PTS_LAT=29.7, PTS_LON=-82.0
-./xmlchange CLM_FORCE_COLDSTART=on, RUN_TYPE=startup
+./xmlchange PTS_MODE=TRUE,PTS_LAT=29.7,PTS_LON=-82.0
+./xmlchange CLM_FORCE_COLDSTART=on,RUN_TYPE=startup
 
 # change variables to use a single core and adjust wall time
 ./xmlchange NTASKS=1
-./xmlchange JOB_WALLCLOCK_TIME=6:00:00
+./xmlchange JOB_WALLCLOCK_TIME=1:00:00
 
 # setup, build, and submit the case as usual
 ./case.setup
@@ -346,14 +353,7 @@ cd /blue/gerber/cdevaneprugh/cases/testPTS_OSBS
 ./case.submit
 ```
 
-Unfortunately, there is some issue with downloading the input data. It outputs this after submitting the case.
+Looks like we may need to create the case with the mpi-serial library? We're getting some mpi errors.
 
-```bash
-Loading input file list: 'Buildconf/clm.input_data_list'
-Model clm no file specified for finidat
-Checking server None with protocol None
-Setting resource.RLIMIT_STACK to -1 from (-1, -1)
-Client protocol None not enabled
-ERROR: Could not find all inputdata on any server
-```
+
 
