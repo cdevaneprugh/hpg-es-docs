@@ -353,7 +353,5 @@ cd /blue/gerber/cdevaneprugh/cases/testPTS_OSBS
 ./case.submit
 ```
 
-Looks like we may need to create the case with the mpi-serial library? We're getting some mpi errors.
-
 
 
