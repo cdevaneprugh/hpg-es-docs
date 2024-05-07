@@ -353,5 +353,26 @@ cd /blue/gerber/cdevaneprugh/cases/testPTS_OSBS
 ./case.submit
 ```
 
+Was getting mpi errors with this. Following advice on the forums, trying the following.
 
+```bash
+# create case
+./create_newcase --case /blue/gerber/cdevaneprugh/cases/osbsPTSmod --compset 1850_DATM%CRUv7_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV --res f19_g17 --run-unsupported
+cd /blue/gerber/cdevaneprugh/cases/osbsPTSmod
 
+# change variables
+./xmlchange NTASKS=1,JOB_WALLCLOCK_TIME=1:00:00
+./xmlchange PTS_MODE=TRUE,PTS_LAT=29.7,PTS_LON=-82.0
+./xmlchange CLM_FORCE_COLDSTART=on,RUN_TYPE=startup
+
+# setup and build case like normal
+./case.setup
+./case.build
+
+# check input data
+./check_input_data
+
+# submit case
+./case.submit
+```
+It ran successfully. Now I'd like to try and understand what the difference between the two compsets is.
