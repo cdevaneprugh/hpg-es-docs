@@ -20,6 +20,9 @@
       1. [Regression Testing](#reg_tests)
       2. [Ensemble Consistency Testing](#ect)
 5. [Single Point Cases](#pts_mode)
+   1. [Best Practices & Where We Went Wrong](#clm_best_practices)
+   2. [Compset Testing](#clm_compset_testing)
+
 
 # Introduction <a name="intro"></a>
 
@@ -331,7 +334,7 @@ Which outputs the following to the terminal.
 I1850Clm50SpCru      : 1850_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV
 ```
 
-To create our case we can do something like.
+To create our case we can do something like:
 
 ```bash
 ./create_newcase --case /blue/gerber/cdevaneprugh/cases/testPTS_OSBS --res f19_g17 --compset I1850Clm50SpCru
@@ -353,7 +356,16 @@ cd /blue/gerber/cdevaneprugh/cases/testPTS_OSBS
 ./case.submit
 ```
 
-Was getting mpi errors with this. Following advice on the forums, trying the following.
+This case will build and download input data, but fail during runtime with the following mpi error.  
+
+```bash
+MPI_ABORT was invoked on rank 0 in communicator MPI_COMM_WORLD with errorcode 2.
+
+NOTE: invoking MPI_ABORT causes Open MPI to kill all MPI processes.
+You may or may not see output from other processes, depending on exactly when Open MPI kills them.
+```
+
+Following advice on [my forum post](https://bb.cgd.ucar.edu/cesm/threads/issues-downloading-input-data-in-clm5-single-point-mode.9600/#post-55331), I tried a different compset which worked perfectly.
 
 ```bash
 # create case
@@ -375,4 +387,35 @@ cd /blue/gerber/cdevaneprugh/cases/osbsPTSmod
 # submit case
 ./case.submit
 ```
-It ran successfully. Now I'd like to try and understand what the difference between the two compsets is.
+The next section will go into where we went wrong, and some things we can do to have successful runs in the future.
+
+## CLM Best Practices and Where Our PTS Run Went Wrong<a name="clm_best_practices"></a>
+
+The full comment from my [post](https://bb.cgd.ucar.edu/cesm/threads/issues-downloading-input-data-in-clm5-single-point-mode.9600/#post-55331) is:
+
+> The error message in the cesm log is:
+>
+> MCT::m_SparseMatrixPlus:: FATAL--length of vector y different from row count of sMat.Length of y = 1 Number of rows in sMat = 13824
+> 000.MCT(MPEU)::die.: from MCT::m_SparseMatrixPlus::initDistributed_()
+>
+> It seems like there must be mismatch between two of the datasets you are using. One seems to be single point (y=1) and the other is 1.9x2.5 (144x96=13824). I think it might be because the compset you are using has CISM and MOSART in it. The long name for that compset is:
+>
+> 1850_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV
+>
+> Try specifying stubs for those, e.g.,
+>
+> 1850_DATM%CRUv7_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV
+
+So the hypothesis is that any compset with MOSART or CISM will cause an issue in single point mode. Okay, so the easiest option is to just pick a compset we like, then specify stubs in the same way that was suggested in the post. The only problem is that doing this turns our compset into one that is not scientifically validated. This might not be an issue for our purposes. I also noticed an interesting thing in the [clm documentation's best practices section](https://escomp.github.io/ctsm-docs/versions/release-clm5.0/html/users_guide/overview/introduction.html#best-practices).
+
+> CLM5.0 includes BOTH the old CLM4.0, CLM4.5 physics AND the new CLM5.0 physics and you can toggle between those three. The “standard” practice for CLM4.0 is to run with CN on, and with Qian atmospheric forcing. While the “standard” practice for CLM4.5 is to run with BGC on, and CRUNCEP atmospheric forcing. And finally the “standard” practice for CLM5.0 is to run with BGC and Prognostic Crop on, with the MOSART model for river routing, as well as the CISM ice sheet model, and using GSWP3 atmospheric forcing. “BGC” is the new CLM5.0 biogeochemistry and include CENTURY-like pools, vertical resolved carbon, as well as Nitrification and de-Nitrification
+
+So if it is best practice to use MOSART as well as CISM for clm5.0, maybe we can just use the clm4.0 or 4.5 physics instead. For a test, I'm going to look at the initial compsets Stefan gave to me, then see if I can find the equivalent one that is running clm4.0 or 4.5 and test those.
+
+Looking at the compsets, the one suggested in the forum post is effectively the clm4.0 version of what Stefan wanted, but with clm5.0 physics substituted (remember this doesn't follow best practices and is not scientifically validated). There are also plenty of scientifically valid compsets that don't use MOSART or CISM.
+
+It would be interesting to see if I can narrow down which is messing us up. I'll find a compset with only CISM, see if that runs globally and in single point mode, then repeat with a compset containing MOSART.
+
+With the abundance of compsets and resolutions, I'm going to need a better naming convention for my case directories. I think something like `compset.resolution.modifiers` would work. For example the name for our initial single point test (that failed) would be `I1850Clm50SpCru.f19_g17.PTS`.
+
+### Compset Testing<a name="clm_compset_testing"></a>
