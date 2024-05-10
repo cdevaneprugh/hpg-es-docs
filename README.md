@@ -490,10 +490,12 @@ HIST_DATM%GSWP3v1_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV	:	IHistClm45SpGs	:	f09_g17
 
 HIST_DATM%QIA_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV	:	IHistClm50BgcQianGs	:	f09_g17
 
-1. Global:
-2. PTS:
+1. Global: Fail (Out of Memory)
+   
+   > Primary job  terminated normally, but 1 process returned
+   > a non-zero exit code. Per user-direction, the job has been aborted.
 
-
+3. PTS: Success
 
 HIST_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV	:	IHistClm50Sp	:	f09_g17
 
