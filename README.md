@@ -420,6 +420,13 @@ With the abundance of compsets and resolutions, I'm going to need a better namin
 
 ### Compset Testing<a name="clm_compset_testing"></a>
 
+Anytime we get an error that is something like:
+
+> MCT::m_SparseMatrixPlus:: FATAL--length of vector y different from row count of sMat.Length of y = 1 Number of rows in sMat = 55296
+
+We can assume there is some issue with MOSART or CISM. The goal of running the following cases is to determine which is causing the error in single point mode.
+I did this by choosing similar compsets that use physics from clm4.0 4.5 and 5.0 as well as running a global and PTS version of each compset.
+
 __Compset Long Name	:	Compset Alias	:	Resolution Used__
 
 1850_DATM%CRUv7_CLM40%SP_SICE_SOCN_RTM_SGLC_SWAV	:	I1850Clm40SpCruGs	:	f19_g17
@@ -457,16 +464,16 @@ __Compset Long Name	:	Compset Alias	:	Resolution Used__
 1850_DATM%CRUv7_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV	:	NONE	:	f19_g17
 
 1. Global: Success
-
-2. PTS: Success
+   
+3. PTS: Success
 
    
 
 2000_DATM%GSWP3v1_CLM50%SP-VIC_SICE_SOCN_RTM_CISM2%NOEVOLVE_SWAV	:	I2000Clm50Vic	:	f09_g17
 
 1. Global:
-
-2. PTS:
+   
+3. PTS:
 
    
 
@@ -481,8 +488,7 @@ HIST_DATM%GSWP3v1_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV	:	IHistClm45SpGs	:	f09_g17
 
 1. Global: Fail (Out of Memory)
 
-   > Primary job  terminated normally, but 1 process returned
-   > a non-zero exit code. Per user-direction, the job has been aborted.
+   > Primary job  terminated normally, but 1 process returned a non-zero exit code. Per user-direction, the job has been aborted.
 
 2. PTS: Success
 
@@ -492,8 +498,7 @@ HIST_DATM%QIA_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV	:	IHistClm50BgcQianGs	:	f09_g
 
 1. Global: Fail (Out of Memory)
    
-   > Primary job  terminated normally, but 1 process returned
-   > a non-zero exit code. Per user-direction, the job has been aborted.
+   > Primary job  terminated normally, but 1 process returned a non-zero exit code. Per user-direction, the job has been aborted.
 
 3. PTS: Success
 
@@ -501,11 +506,13 @@ HIST_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV	:	IHistClm50Sp	:
 
 1. Global: Fail (Out of Memory)
 
-   > Primary job  terminated normally, but 1 process returned
-   > a non-zero exit code. Per user-direction, the job has been aborted.
+   > Primary job  terminated normally, but 1 process returned a non-zero exit code. Per user-direction, the job has been aborted.
 
 2. PTS: Fail
 
    > MCT::m_SparseMatrixPlus:: FATAL--length of vector y different from row count of sMat.Length of y = 1 Number of rows in sMat = 55296
+   > 
    > 000.MCT(MPEU)::die.: from MCT::m_SparseMatrixPlus::initDistributed_()
 
+__Conclusion__
+It looks like CISM is the issue. The Qian case (IHistClm50BgcQianGs) uses MOSART and the PTS mode case ran successfully.
