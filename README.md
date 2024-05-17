@@ -19,7 +19,12 @@
    3. [Porting and Validating CIME](#cime_port)
       1. [Regression Testing](#reg_tests)
       2. [Ensemble Consistency Testing](#ect)
-5. [Single Point Cases](#pts_mode)
+5. [Using CESM on HiPerGator](#using_cesm)
+   1. [Recommended Reading](#cesm_reading)
+   2. [Creating, Building, & Running a Case on HPG]()
+   3. [Example Case]()
+   	1. [Did My Case Fail, or Time Out?]()
+6. [Single Point Cases](#pts_mode)
    1. [Best Practices & Where We Went Wrong](#clm_best_practices)
    2. [Compset Testing](#clm_compset_testing)
 
@@ -313,6 +318,173 @@ module load python-core/2.7.14
 ```
 
 Additionally, to use the `addmetadata` script we need the `nco` tool `ncks`. The version available on hipergator is not new enough so we will have to create a conda environment and install the tool ourselves. Instructions for using conda on hipergator can be found [here](https://help.rc.ufl.edu/doc/Conda). You just need to download the most recent version of `nco` with something like `mamba install nco`.
+
+# Using CESM on HiPerGator<a name="using_cesm"></a>
+## Recommended Reading<a name="cesm_reading"></a> 
+There are three pieces of documentation that I strongly suggest you read through to familiarize yourself with the process of creating cases on cesm.
+
+The first is the [quick start](https://escomp.github.io/CESM/versions/cesm2.1/html/quickstart.html) section of CESM's documentation. This will give you a brief overview of everything you need to create, build, and run a case.
+
+The second is the ["Using the Case Control System"](https://esmci.github.io/cime/versions/master/html/users_guide/index.html) section of the CIME documentation. This will give you a more in depth look at your options when building cases. 
+
+Finally, in the SWES department, we will be primarily using clm, the land model component of CESM. Accordingly, reading through the [clm documentation](https://escomp.github.io/ctsm-docs/versions/release-clm5.0/html/users_guide/index.html) in its entirety is strongly recommended.
+
+## CESM File Structure on HPG<a name="cesm_structure"></a>
+For the "gerber" group on HiPerGator, CESM has been installed in `/blue/gerber/earth_models/cesm215`. Accordingly, the scripts to create a new case, or query information about case options, are located in `/blue/gerber/earth_models/cesm215/cime/scripts`. 
+
+Your machine config file (located at `~/.cime/config_machines.xml`) gives you control over where you want the build, and run time files for cases to go. You will also want to make a directory somewhere convenient to contain the cases you create with the `cime` scripts. 
+
+It should be noted that creating a case is different than building one. The case build should be done on the `/blue` drive for fast access during run time. The created cases can be stored in your home directory for convenience if you'd like.
+
+If you leave the `machine_config.xml` at its default settings, and create a "cases" directory at `/blue/GROUP/USER/cases`, the directory tree at `/blue/GROUP/USER` should look something like the following.
+
+```bash
+.
+├── cases
+│   └── EXAMPLE_CASE
+└── earth_model_output
+    ├── cesm_baselines
+    ├── cime_output_root
+    │   ├── archive
+    │   └── EXAMPLE_CASE
+    │       ├── bld
+    │       └── run
+    └── timings
+```
+
+## Creating, Building, and Running a Case on HPG<a name="cesm_case"></a>
+
+```bash
+# cd to the cime scripts directory
+cd /blue/gerber/earth_models/cime/scripts
+
+# create your case, specifying the case location, compset, and resolution
+./create_newcase --case /blue/GROUP/USER/cases/EXAMPLE_CASE --compset COMPSET --res RESOLUTION
+```
+
+CIME will output a bunch of text, then say whether the the case was created successfully, and where it was created.
+If you are running a compset that is not scientifically validated, you will have to add the `--run-unsupported` option to your `create_newcase` command.
+
+```bash
+# go to the case directory
+cd /blue/GROUP/USER/cases/case1
+```
+
+For the "Gerber" group, there are a few variables that we will most likely need to change. The first is the number of cores used by the model. Most compsets will request one (or several) nodes (128-512 cores) by default.
+Our research group only has access to 20 cores on our default queue, so we need to make sure we're under the QOS limit. We can do this with the `xmlchange` script.
+
+First check how many cores each component is requesting by running `./pelayout`, which will list out the individual components, along with what resources they are asking for.
+The variable we want to pay atention to is `NTASKS`. This corresponds to how many cores will be requested when the case is submitted.
+
+```bash
+# change the number of cores to something more sensible
+./xmlchange NTASKS=8
+```
+
+This will take us down to using only 8 cores when we run the case.
+
+The downside of using fewer cores, is that we may have to run the case for longer on the compute node. We can extend the time requested by changeing the `JOB_WALLCLOCK_TIME` variable.
+
+```bash
+# check the current setting
+./xmlquery JOB_WALLCLOCK_TIME
+
+# change the variable if needed
+./xmlchange JOB_WALLCLOCK_TIME=1:00:00
+```
+
+If you're unsure of the exact name of the varibale you want to check/change, you can list all the defined variables, then pipe to grep and search.
+```bash
+# running grep with the -i flag will ignore case distinction
+./xmlquery --listall | grep -i SEARCH_TERM
+```
+Once you've set all of your variables, setup, build, and submit the case as usual.
+```bash
+./case.setup
+./case.build
+./case.submit
+```
+
+If you setup and build the case but realize you need to change some variables before submitting, it's a good idea to clean the case before rebuilding. We can do this with something like:
+
+```bash
+./xmlchange SOME_VARIABLE
+
+./case.setup --clean
+./case.build --clean
+
+./case.setup
+./case.build
+./case.submit
+```
+
+### Example Case<a name="clm_example"></a>
+Here is an example of creating, building, and running a case with a compset typical of what we would use in the SWES department.
+The long name for our compset is `1850_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV` and the resolution we will be using is `f19_g17`. 
+While we can certainly use the long name for the compset, sometimes it's nicer to use the alias (assuming one is available). Here's a trick for finding your compset's alias.
+
+```bash
+# cd to the cesm, cime scripts
+cd /blue/gerber/earth_models/cesm215/cime/scripts
+
+# use the query config script, then pipe it to grep and search the compset's long name
+./query_config --compsets all | grep 1850_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV
+```
+
+Which should output the following.
+```bash
+I1850Clm50SpCru      : 1850_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV
+```
+
+Now we can create the case.
+
+```bash
+# cd to the cesm, cime scripts
+cd /blue/gerber/earth_models/cesm215/cime/scripts
+
+# create the case using a sensible name, the compset alias, and desired resolution
+./create_newcase --case /blue/GROUP/USER/cases/EXAMPLE_CASE --compset I1850Clm50SpCru --res f19_g17
+
+# cd to the case directory
+cd /blue/GROUP/USER/cases/EXAMPLE_CASE
+
+# check the amount of cores being requested by default
+./xmlquery NTASKS
+
+# it's probably going to be higher than our QOS, so we need to change it along with extending the job time
+./xmlchange NTASKS=8,JOB_WALLCLOCK_TIME=1:00:00
+
+# setup the case
+./case.setup
+
+# check the submit script to make sure it's requesting the correct amount of resources
+./preview_run
+
+# if everything looks good, build the case (this can take a few minutes)
+./case.build
+
+# submit the case to the scheduler and run the experiment
+./case.submit
+```
+
+Check your UF email for updates from the SLURM scheduler. A case could fail for several reasons, most of which should be pretty obvious.
+If you accidentally requested more resources than your QOS allows, it will tell you in the email. If your case fails with an OOM (out of memory) error, try increasing the number of cores by changing the `NTASKS` variable.
+You may want to switch to your burst QOS sometimes. You can set this manually by changing the `JOB_QUEUE` variable (using the `xmlchange` script) to the name of your burst QOS.
+
+### Did My Case Fail, or Time Out?
+There is a situation that arises where it can be difficult to tell if a case has failed, or just timed out.
+```bash
+# cd to your case's run directory
+cd /blue/GROUP/USER/earth_model_output/cime_output_root/CASE/run
+
+# save the names of the run time log files to a variable
+LOGS=$(ls | grep .log)
+
+# use the stat command to see when they all were last modified
+stat $LOGS | grep Modify
+```
+
+If all the times printed to the terminal are within a few seconds to a few minutes of each other, your case likely timed out. You can try rebuilding the case after increasing the `JOB_WALLCLOCK_TIME`.
 
 # Single Point Cases<a name="pts_mode"></a>
 
