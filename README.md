@@ -27,11 +27,11 @@
 6. [Single Point Cases](#pts_mode)
    1. [Best Practices & Where We Went Wrong](#clm_best_practices)
    2. [Compset Testing](#clm_compset_testing)
-   3. [Single Point Cases With Spin Up](#pts_slides)
-   	1. [Exercise 4a: Create a Global Case](#ex_4a)
-	2. [Exercise 4b: Generate Domain and Surface Datasets](#ex_4b)
-	3. [Exercise 4c: Create a New Case for the Single Point Run](#ex_4c)
-	4. [Exercise 4d: Single Point BGC_AD](#ex_4d)
+7. [Single Point Cases With Spin Up](#pts_slides)
+   1. [Exercise 4a: Create a Global Case](#ex_4a)
+   2. [Exercise 4b: Generate Domain and Surface Datasets](#ex_4b)
+   3. [Exercise 4c: Create a New Case for the Single Point Run](#ex_4c)
+   4. [Exercise 4d: Single Point BGC_AD](#ex_4d)
 
 
 # Introduction <a name="intro"></a>
@@ -499,6 +499,7 @@ If all the times printed to the terminal are within a few seconds to a few minut
 Following the instructions [here](https://escomp.github.io/ctsm-docs/versions/release-clm5.0/html/users_guide/running-single-points/running-pts_mode-configurations.html), we can run the clm model on a single grid cell by specifying a latitude and longitude. However, the instructions on the clm website seem to be a bit outdated. CIME no longer supports the `-pts_lat` or `-pts_lon`  arguments with the `create_newcase` script, also multi-character arguments should begin with `--` rather than `-`.  We can still run on a single point by creating a new case, then changing the appropriate variables before building the executable.
 
 __A Note on DATM_MODE__ [source](https://www2.cgd.ucar.edu/events/2019/ctsm/files/practical4-wieder.pdf#page=16)
+
 There are five modes used with CLM that specify the type of Meteorological data that’s used.
 1. CLMGSWP3 (this is the preferred meteorological data to use w/ CLM5)
 2. CLMCRUNCEP (Use global NCEP forcing at half-degree resolution from CRU goes from 1900-2010. GSWP3 similar time period and spatial resolution).
