@@ -21,12 +21,17 @@
       2. [Ensemble Consistency Testing](#ect)
 5. [Using CESM on HiPerGator](#using_cesm)
    1. [Recommended Reading](#cesm_reading)
-   2. [Creating, Building, & Running a Case on HPG]()
-   3. [Example Case]()
-   	1. [Did My Case Fail, or Time Out?]()
+   2. [Creating, Building, & Running a Case on HPG](#cesm_case)
+   3. [Example Case](#clm_example)
+   	1. [Did My Case Fail, or Time Out?](#fail_vs_timeout)
 6. [Single Point Cases](#pts_mode)
    1. [Best Practices & Where We Went Wrong](#clm_best_practices)
    2. [Compset Testing](#clm_compset_testing)
+   3. [Single Point Cases With Spin Up](#pts_slides)
+   	1. [Exercise 4a: Create a Global Case](#ex_4a)
+	2. [Exercise 4b: Generate Domain and Surface Datasets](#ex_4b)
+	3. [Exercise 4c: Create a New Case for the Single Point Run](#ex_4c)
+	4. [Exercise 4d: Single Point BGC_AD](#ex_4d)
 
 
 # Introduction <a name="intro"></a>
@@ -164,6 +169,8 @@ module save default
 ```
 
 This will ensure that the needed programs are loaded by default when you log in to HiPerGator.
+
+You can also use the default `lmod` config file provided on this github page at `.config/lmod/default` by doing a `git checkout` in your `home` directory.
 
 ## Porting CESM<a name="cesm_port"></a>
 
@@ -471,26 +478,33 @@ Check your UF email for updates from the SLURM scheduler. A case could fail for 
 If you accidentally requested more resources than your QOS allows, it will tell you in the email. If your case fails with an OOM (out of memory) error, try increasing the number of cores by changing the `NTASKS` variable.
 You may want to switch to your burst QOS sometimes. You can set this manually by changing the `JOB_QUEUE` variable (using the `xmlchange` script) to the name of your burst QOS.
 
-### Did My Case Fail, or Time Out?
-There is a situation that arises where it can be difficult to tell if a case has failed, or just timed out.
+### Did My Case Fail, or Time Out?<a name="fail_vs_timeout"></a>
+There is a situation that arises where it can be difficult to tell if a case has failed, or just timed out. Here's how you can check if it is a time out issue.
+
 ```bash
 # cd to your case's run directory
 cd /blue/GROUP/USER/earth_model_output/cime_output_root/CASE/run
 
-# save the names of the run time log files to a variable
+# save the names of the run time log files to a `bash` variable
 LOGS=$(ls | grep .log)
 
 # use the stat command to see when they all were last modified
 stat $LOGS | grep Modify
 ```
 
-If all the times printed to the terminal are within a few seconds to a few minutes of each other, your case likely timed out. You can try rebuilding the case after increasing the `JOB_WALLCLOCK_TIME`.
+If all the times printed to the terminal are within a few seconds to a few minutes of each other, your case likely timed out. You can try rebuilding the case after increasing the `JOB_WALLCLOCK_TIME` variable.
 
 # Single Point Cases<a name="pts_mode"></a>
 
 Following the instructions [here](https://escomp.github.io/ctsm-docs/versions/release-clm5.0/html/users_guide/running-single-points/running-pts_mode-configurations.html), we can run the clm model on a single grid cell by specifying a latitude and longitude. However, the instructions on the clm website seem to be a bit outdated. CIME no longer supports the `-pts_lat` or `-pts_lon`  arguments with the `create_newcase` script, also multi-character arguments should begin with `--` rather than `-`.  We can still run on a single point by creating a new case, then changing the appropriate variables before building the executable.
 
-The compset used to test the Ordway Swisher Biological Station has the full name `1850_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV` however the short name given (`I1850Clm50BSpCru`) is not found in our supported compset lists. I think you added an extra "B" in the short compset name. We can use the `query_config` script to find supported compsets.
+__A Note on DATM_MODE__ [source](https://www2.cgd.ucar.edu/events/2019/ctsm/files/practical4-wieder.pdf#page=16)
+There are five modes used with CLM that specify the type of Meteorological data that’s used.
+1. CLMGSWP3 (this is the preferred meteorological data to use w/ CLM5)
+2. CLMCRUNCEP (Use global NCEP forcing at half-degree resolution from CRU goes from 1900-2010. GSWP3 similar time period and spatial resolution).
+3. CLM_QIAN (Deprecated. Use NCEP forcing at T62 resolution corrected by Qian et. al. goes from 1948-2004).
+4. CLM1PT (Use the local meteorology from your specific tower site).
+5. CPLHIST (This name may have changed. Use atmospheric data from a previous CESM simulation).
 
 ```bash
 # cd to cime/scripts 
@@ -688,3 +702,52 @@ HIST_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV	:	IHistClm50Sp	:
 
 __Conclusion__
 It looks like CISM is the issue. The Qian case (IHistClm50BgcQianGs) uses MOSART and the PTS mode case ran successfully.
+
+## Single Point With Spin Up ([Slides](https://www2.cgd.ucar.edu/events/2019/ctsm/files/practical4-wieder.pdf))<a name="pts_slides"></a>
+I'll go through the exercises in order here, and note any issues I ran in to or modifications I had to make.
+
+### Exercise 4a: Create a Global Case<a name='ex_4a"></a>
+The compset I'll be using is `HIST_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV` which is a modified version of the supported compset `IHistClm50Sp` that removes the CISM portion of the model.
+
+```bash
+# cd to cime scripts
+cd /blue/gerber/earth_models/cesm215/cime/scripts
+
+# create our case
+./create_newcase --case /blue/gerber/cdevaneprugh/cases/IHistClm50Sp_001 --compset HIST_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV --res f09_g17 --run-unsupported
+
+# cd to case
+cd /blue/gerber/cdevaneprugh/cases/IHistClm50Sp_001
+
+./case.setup
+./preview_namelists
+
+# Look for the path to the surface data set and domain file
+cat CaseDocs/lnd_in
+```
+
+### Exercise 4b: Generate Domain and Surface Data Sets<a name="ex_4b"></a>
+It looks like there's a script called `singlept` that we need access to. I think this was provided during the workshop on the NCAR server being used. Additionally, there is a `ncar_pylib` I need access to, it's possible this is available to download with `conda`.
+There was a list of many options that are changed in the `singlept` script but I can't find the variables they are setting when using `xmlquery` and looking in the `CaseDocs` directory.
+
+### Exercise 4c: Create a New Case for the Single Point Run<a name="ex_4c"></a>
+
+```bash
+# cd to cime scripts
+cd /blue/gerber/earth_models/cesm215/cime/scripts
+
+# create a new compset with a stub ice and river model
+./create_newcase --case /blue/gerber/cdevaneprugh/cases/ex_4c --compset 1850_DATM%CRUv7_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV --res f09_g17 --run-unsupported
+
+# go to case directory
+cd /blue/gerber/cdevaneprugh/cases/ex_4c
+```
+
+Following the guide there are many variables to change. Rather than list them all out, use the script `ready_clm_case` provided in this repositroy.
+Note: You should not change the `MPILIB` variable to `mpi-serial`. On our system, things seem to break if you do this. I am still unsure why.
+On [page 30](https://www2.cgd.ucar.edu/events/2019/ctsm/files/practical4-wieder.pdf#page=30) of the slides they need the new domain files that we would have made in exercise 4b. We'll have to skip this part for now.
+
+It _looks_ like all the variables were changed successfully, and the model was built. Unfortunately without those scripts from the workshop, we're sort of stuck. 
+
+### Exercise 4d: Single Point BGC_AD<a name="ex_4d"></a>
+The xml variable changes are almost identical to exercise 4c, with one or two exceptions. Unfortunately, we run into the same problem here in that we need the scripts from exercise 4b.
